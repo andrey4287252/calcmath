@@ -1,0 +1,123 @@
+import numpy as np
+import pandas as pd
+import functools
+import math
+import fractions
+import itertools as it
+from numpy import linalg as LA
+import matplotlib.pyplot as plt
+
+'''
+def scal(x,y):
+    m = x@(y.transpose())
+    return m
+
+H = np.array([4., 10., 15., 20., 30., 40., 60., 80])
+B = np.array([13.0, 14.0, 15.4, 16.3, 17.2, 17.8, 18.5, 18.8])
+p = np.array([1 for i in range(len(H))])
+N = 100
+for i in range(N):
+    A = np.array([[scal(p, B*B), scal(p, H*B*B)], [scal(p, B*B*H), scal(p, H*H*B*B)]])    
+    F = np.array([scal(p, H*B), scal(p, H*H*B)])
+    v = LA.solve(A, F)
+    a = v[0]
+    b = v[1]
+    p = np.array([1/((a + b*H[k])**2) for k in range(len(H))])
+    
+print(a , b)
+'''
+
+#вспомогательный полином, x - узловые точки, t - независимая переменная. n по умолчанию должно быть равно n+1!!!
+def auxpolinom(x,t,n):
+    p1=1
+    for i in range(len(x)):
+        if i==n:
+            p1=p1*1
+        else: 
+            p1=p1*(t-x[i])
+    return p1
+
+#производная вспомогательного многочлена, x - узловые точки, t - независимая переменная
+def derauxpolinom(x,t):
+    z=0
+    for j in range(len(x)): 
+        z=z+auxpolinom(x,t,j)
+    return z
+
+#Полином лагранжа, x - узловые точки, t - независимая переменная, l_j[t]
+
+def lagranz(x,t,j):
+    p1=1; p2=1
+    for i in range(len(x)):
+        if i==j:
+            p1=p1*1; p2=p2*1   
+        else: 
+            p1=p1*(t-x[i])
+            p2=p2*(x[j]-x[i])
+    return p1/p2
+
+#главный коэффициент l_j[x]
+def maincoeflagr(x,j):
+    p1=1; p2=1
+    for i in range(len(x)):
+        if i==j:
+            p1=p1*1; p2=p2*1   
+        else: 
+            p1=p1*x[i]
+            p2=p2*(x[j]-x[i])
+    z=1/p2
+    return z
+
+#Интерполяция полиномом Лагранжа,x - узловые точки, y[i]=f[x_i], t - независимая переменная, l_j[t]
+def polylagranz(x,y,t):
+    z=0
+    
+    for j in range(len(y)):
+        z=z+y[j]*lagranz(x,t,j)
+        
+    return z
+    
+# Разность n порядка от x_k до x_n (f(x_k, x_k+1 ... x_n))
+def difference(x,y,k,n):
+    if n==1:
+        a=y[k+1]
+        b=y[k]
+        return (a-b)/(x[k+n]-x[k])
+    else:
+        n=n-1
+        return (difference(x,y,k+1,n)-difference(x,y,k,n))/(x[k+n+1]-x[k])
+    
+#Интерполяция полиномом Ньютона,x - узловые точки, y[i]=f[x_i], t - независимая переменная, r - порядок аппроксимации
+def polynewton(x,y,t,r):
+    z=0
+    for j in range(r):
+        p1=1
+        for i in range(j):
+            if i==j:
+                p1=p1*1   
+            else: 
+                p1=p1*(t-x[i])
+        z=z + difference(x,y,0,j)*p1
+    return t
+        
+#Интерполяция полиномом Ньютона,x - узловые точки, y[i]=f[x_i], t - независимая переменная, r - порядок аппроксимации
+def polynewtoncoef(x,y,t,r):
+    z=np.zeros(r)
+    for j in range(r):
+        z[j]=difference(x,y,0,j)*p1
+    return z
+
+#примеры
+x=np.array([2,3,4,5,6], dtype=float)
+y=np.array([2,6,8,4], dtype=float)
+
+
+xnew=np.linspace(np.min(x),np.max(x),100)
+ynew=[polylagranz(x,y,i) for i in xnew]
+
+plt.plot(x,y,xnew,ynew)
+plt.grid(True)
+plt.show()
+
+print(lagranz(x,x[3],3))
+print(maincoeflagr(x,0))
